@@ -5,6 +5,10 @@ const tools = document.querySelectorAll(".tool");
 const strokeColorsEle = document.querySelectorAll(".stroke-color");
 const configCont = document.querySelector(".config-cont");
 const textInput = document.getElementById("textInput");
+const startBtn = document.getElementById("start-btn");
+const stopBtn = document.getElementById("stop-btn");
+const video = document.querySelector("video");
+const videoCont = document.querySelector(".video-cont");
 
 function draw() {
   if (canvas.getContext) {
@@ -445,6 +449,73 @@ function draw() {
       }
     });
 
+    let mediaRecorder;
+    let recordedChunks = [];
+    startBtn.addEventListener("click", async () => {
+      try {
+        // Capture screen video
+        recordedChunks = [];
+        const screenStream = await navigator.mediaDevices.getDisplayMedia({
+          video: { displaySurface: "browser" },
+        });
+
+        const videoStream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+        });
+
+        const audioStream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+        });
+
+        startBtn.style.display = "none";
+        stopBtn.style.display = "inline-block";
+        videoCont.style.display = "block";
+
+        video.srcObject = videoStream;
+
+        // Combine both streams
+        const combinedStream = new MediaStream([
+          ...screenStream.getTracks(), // Video tracks
+          ...audioStream.getTracks(), // Audio tracks
+        ]);
+
+        mediaRecorder = new MediaRecorder(combinedStream);
+
+        mediaRecorder.ondataavailable = function (event) {
+          recordedChunks.push(event.data);
+        };
+
+        mediaRecorder.onstop = function () {
+          screenStream.getTracks().forEach((track) => track.stop());
+
+          const blob = new Blob(recordedChunks, {
+            type: "video/webm",
+          });
+          const url = URL.createObjectURL(blob);
+
+          // Create a download link for the recorded video
+          const a = document.createElement("a");
+          a.style.display = "none";
+          a.href = url;
+          a.download = "digital_board_recording.webm";
+          a.click();
+          window.URL.revokeObjectURL(url);
+        };
+
+        mediaRecorder.start();
+      } catch (err) {
+        console.error("Error: " + err);
+      }
+    });
+
+    stopBtn.addEventListener("click", () => {
+      mediaRecorder.stop();
+
+      // Stop the screen sharing when recording stops
+      startBtn.style.display = "inline-block";
+      stopBtn.style.display = "none";
+      videoCont.style.display = "none";
+    });
     // drawing code here
   } else {
     // canvas-unsupported code here

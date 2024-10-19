@@ -52,15 +52,30 @@
         />
       </div>
     </div>
+
     <canvas id="digital-board-canvas"
       >Something went wrong(May be your browser do not support canvas)!</canvas
     >
+
     <input
       type="text"
       id="textInput"
       placeholder="Enter text"
       style="display: none"
     />
+
+    <div class="video-cont">
+      <video autoplay></video>
+    </div>
+
+    <div class="screen-record-controls">
+      <span class="material-symbols-outlined" id="start-btn">
+        play_circle
+      </span>
+
+      <span class="material-symbols-outlined" id="stop-btn"> stop_circle </span>
+    </div>
+
     <script src="script.js"></script>
   </body>
 </html>
