@@ -487,6 +487,8 @@ function draw() {
 
         mediaRecorder.onstop = function () {
           screenStream.getTracks().forEach((track) => track.stop());
+          videoStream.getTracks().forEach((track) => track.stop());
+          audioStream.getTracks().forEach((track) => track.stop());
 
           const blob = new Blob(recordedChunks, {
             type: "video/webm",
