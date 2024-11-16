@@ -9,6 +9,7 @@ const startBtn = document.getElementById("start-btn");
 const stopBtn = document.getElementById("stop-btn");
 const video = document.querySelector("video");
 const videoCont = document.querySelector(".video-cont");
+const eraserIcon = document.getElementById("eraser-icon");
 
 function draw() {
   if (canvas.getContext) {
@@ -20,6 +21,7 @@ function draw() {
     canvas.height = canvasHeight;
 
     let mouseDown = false;
+    let eraserActive = false;
     let selectedToolOption = null;
     let strokeColor = "black";
     let lineWidth = strokeWidthEle.value;
@@ -279,6 +281,14 @@ function draw() {
 
         if (tool?.id !== "eraser") {
           configCont.style.display = "block";
+          eraserActive = false;
+          eraserIcon.style.display = "none";
+          canvas.style.cursor = " crosshair";
+        }
+        if (selectedToolOption?.id === "eraser") {
+          eraserIcon.style.display = "inline-block";
+          canvas.style.cursor = "none";
+          eraserActive = true;
         }
       });
     });
@@ -349,11 +359,16 @@ function draw() {
     });
 
     canvas.addEventListener("mousemove", (e) => {
+      if (eraserActive) {
+        // Check if eraser tool is selected
+        eraserIcon.style.left = `${e.clientX + window.scrollX}px`;
+        eraserIcon.style.top = `${e.clientY + window.scrollY}px`;
+      }
       if (mouseDown && selectedToolOption) {
         drawStroke({
           x: e.clientX + window.scrollX,
           y: e.clientY + window.scrollY,
-          lineWidth: selectedToolOption.id === "eraser" ? 10 : lineWidth,
+          lineWidth: selectedToolOption.id === "eraser" ? 20 : lineWidth,
           strokeStyle:
             selectedToolOption.id === "eraser" ? "#ffffff" : strokeColor,
         });
@@ -414,6 +429,121 @@ function draw() {
         if (selectedToolOption?.id === "line") {
           const currentX = e.clientX + window.scrollX;
           const currentY = e.clientY + window.scrollY;
+          allPaths.push({
+            startX,
+            startY,
+            endX: currentX,
+            endY: currentY,
+            tool: "line",
+            lineWidth,
+            strokeColor,
+          });
+        }
+      }
+
+      mouseDown = false;
+    });
+
+    canvas.addEventListener("touchstart", (e) => {
+      e.preventDefault(); // Prevent default touch behaviors
+      configCont.style.display = "none";
+      const touch = e.touches[0];
+
+      mouseDown = true;
+      beginPath({
+        x: touch.clientX + window.scrollX,
+        y: touch.clientY + window.scrollY,
+      });
+
+      if (selectedToolOption?.id === "text") {
+        textX = touch.clientX + window.scrollX;
+        textY = touch.clientY + window.scrollY;
+
+        // Show the text input field and position it
+        textInput.style.display = "block";
+        textInput.style.position = "absolute";
+        textInput.style.left = `${textX}px`;
+        textInput.style.top = `${textY - 40}px`;
+        textInput.value = ""; // Clear input field
+        textInput.focus();
+      }
+    });
+
+    canvas.addEventListener("touchmove", (e) => {
+      e.preventDefault();
+      const touch = e.touches[0];
+      if (eraserActive) {
+        // Check if eraser tool is selected
+        eraserIcon.style.left = `${touch.clientX + window.scrollX}px`;
+        eraserIcon.style.top = `${touch.clientY + window.scrollY}px`;
+      }
+      if (mouseDown && selectedToolOption) {
+        drawStroke({
+          x: touch.clientX + window.scrollX,
+          y: touch.clientY + window.scrollY,
+          lineWidth: selectedToolOption?.id === "eraser" ? 10 : lineWidth,
+          strokeStyle:
+            selectedToolOption?.id === "eraser" ? "#ffffff" : strokeColor,
+        });
+      }
+    });
+
+    canvas.addEventListener("touchend", (e) => {
+      e.preventDefault();
+      const touch = e.changedTouches[0];
+      if (mouseDown) {
+        if (selectedToolOption?.id === "rectangle") {
+          // Save the final rectangle to the array
+          const width = touch.clientX + window.scrollX - startX;
+          const height = touch.clientY + window.scrollY - startY;
+          allPaths.push({
+            x: startX,
+            y: startY,
+            width,
+            height,
+            tool: "rectangle",
+            lineWidth,
+            strokeColor,
+          });
+        }
+
+        if (selectedToolOption?.id === "pencil") {
+          allPaths.push({
+            path: currentPencilPath,
+            tool: "pencil",
+            lineWidth,
+            strokeColor,
+          });
+        }
+
+        if (selectedToolOption?.id === "circle") {
+          const currentX = touch.clientX + window.scrollX;
+          const currentY = touch.clientY + window.scrollY;
+
+          // Calculate the bounding box dimensions
+          const width = currentX - startX;
+          const height = currentY - startY;
+
+          // Calculate the center and radii for the ellipse
+          const centerX = startX + width / 2;
+          const centerY = startY + height / 2;
+          const radiusX = Math.abs(width / 2);
+          const radiusY = Math.abs(height / 2);
+
+          allPaths.push({
+            centerX,
+            centerY,
+            radiusX,
+            radiusY,
+            tool: "circle",
+            lineWidth,
+            strokeColor,
+          });
+        }
+
+        if (selectedToolOption?.id === "line") {
+          const currentX = touch.clientX + window.scrollX;
+          const currentY = touch.clientY + window.scrollY;
           allPaths.push({
             startX,
             startY,

@@ -106,6 +106,16 @@ video {
   transform: scale(1.5); /* Scale up on hover */
 }
 
+#eraser-icon {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  pointer-events: none; /* Prevent interaction with the eraser element */
+  display: none;
+  transform: translate(-50%, -50%);
+  /* Hidden by default */
+}
+
 /**Shared Classes**/
 .mb-5 {
   margin-bottom: 10px;
